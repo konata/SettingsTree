@@ -1,0 +1,70 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.android.settings'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.android.settings"
+        minSdk 33
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+
+    sourceSets {
+        main {
+            def src = Files.list(Paths.get("${project.rootDir}/externals")).filter { Files.isDirectory(it) }.toArray()
+            java.srcDirs = src.toList()
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.preference:preference:1.2.0'
+}
+
+
+task link() {
+    doLast {
+        def baseRoot = "../base"
+        def settingsRoot = "../Settings"
+        def src = ["${baseRoot}/packages/SettingsLib"     : ". ActionBarShadow ActionButtonsPreference ActivityEmbedding AdaptiveIcon AppPreference BannerMessagePreference BarChartPreference ButtonPreference CollapsingToolbarBaseActivity DisplayDensityUtils EmergencyNumber EntityHeaderWidgets FooterPreference HelpUtils IllustrationPreference LayoutPreference MainSwitchPreference RadioButtonPreference RestrictedLockUtils SchedulesProvider SearchProvider SelectorWithWidgetPreference SettingsSpinner SettingsTransition Tile TopIntroPreference TwoTargetPreference UsageProgressBarPreference Utils search".split(/\s+/).toList(),
+                   "${baseRoot}/packages/SettingsProvider": ["."],
+                   "${settingsRoot}/"                     : ["."]]
+        def path = src.collectMany { entry ->
+            def (key, values) = [entry.getKey(), entry.getValue()]
+            values.collect { value -> "${key}/${value}/src" }
+        }
+
+        path.collect { [it, it.replaceAll(/[\.\/]+/, "@").replaceAll(/^@|@$/, "")] }.forEach { pair ->
+            def to = Paths.get("${project.rootDir}/externals/${pair[1]}").toAbsolutePath()
+            def from = Paths.get("${project.rootDir}/${pair[0]}").toAbsolutePath()
+            println("from: ${from} to:${to}")
+            Files.createSymbolicLink(to, from)
+        }
+    }
+}
