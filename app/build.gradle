@@ -45,6 +45,9 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.preference:preference:1.2.0'
+    implementation 'androidx.slice:slice-builders:1.1.0-alpha02'
+    implementation 'androidx.window:embeding'
+    implementation 'androidx.slice:slice-core:1.0.0'
 }
 
 
@@ -52,7 +55,8 @@ task link() {
     doLast {
         def baseRoot = "../base"
         def settingsRoot = "../Settings"
-        def src = ["${baseRoot}/packages/SettingsLib"     : ". ActionBarShadow ActionButtonsPreference ActivityEmbedding AdaptiveIcon AppPreference BannerMessagePreference BarChartPreference ButtonPreference CollapsingToolbarBaseActivity DisplayDensityUtils EmergencyNumber EntityHeaderWidgets FooterPreference HelpUtils IllustrationPreference LayoutPreference MainSwitchPreference RadioButtonPreference RestrictedLockUtils SchedulesProvider SearchProvider SelectorWithWidgetPreference SettingsSpinner SettingsTransition Tile TopIntroPreference TwoTargetPreference UsageProgressBarPreference Utils search".split(/\s+/).toList(),
+        def src = [
+                   "${baseRoot}/packages/SettingsLib"     : ". ActionBarShadow ActionButtonsPreference ActivityEmbedding AdaptiveIcon AppPreference BannerMessagePreference BarChartPreference ButtonPreference CollapsingToolbarBaseActivity DisplayDensityUtils EmergencyNumber EntityHeaderWidgets FooterPreference HelpUtils IllustrationPreference LayoutPreference MainSwitchPreference RadioButtonPreference RestrictedLockUtils SchedulesProvider SearchProvider SelectorWithWidgetPreference SettingsSpinner SettingsTransition Tile TopIntroPreference TwoTargetPreference UsageProgressBarPreference Utils search".split(/\s+/).toList(),
                    "${baseRoot}/packages/SettingsProvider": ["."],
                    "${settingsRoot}/"                     : ["."]]
         def path = src.collectMany { entry ->
