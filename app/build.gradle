@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace 'com.android.settings'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.android.settings"
-        minSdk 33
-        targetSdk 33
+        minSdk 34
+        targetSdk 34
         versionCode 1
         versionName "1.0"
     }
@@ -48,27 +48,39 @@ dependencies {
     implementation 'androidx.slice:slice-builders:1.1.0-alpha02'
     implementation 'androidx.window:embeding'
     implementation 'androidx.slice:slice-core:1.0.0'
+    implementation 'androidx.slice:slice-view:1.1.0-alpha02'
 }
 
 
 task link() {
     doLast {
-        def baseRoot = "../base"
-        def settingsRoot = "../Settings"
-        def src = [
-                   "${baseRoot}/packages/SettingsLib"     : ". ActionBarShadow ActionButtonsPreference ActivityEmbedding AdaptiveIcon AppPreference BannerMessagePreference BarChartPreference ButtonPreference CollapsingToolbarBaseActivity DisplayDensityUtils EmergencyNumber EntityHeaderWidgets FooterPreference HelpUtils IllustrationPreference LayoutPreference MainSwitchPreference RadioButtonPreference RestrictedLockUtils SchedulesProvider SearchProvider SelectorWithWidgetPreference SettingsSpinner SettingsTransition Tile TopIntroPreference TwoTargetPreference UsageProgressBarPreference Utils search".split(/\s+/).toList(),
-                   "${baseRoot}/packages/SettingsProvider": ["."],
-                   "${settingsRoot}/"                     : ["."]]
-        def path = src.collectMany { entry ->
-            def (key, values) = [entry.getKey(), entry.getValue()]
-            values.collect { value -> "${key}/${value}/src" }
+        def directSrc = [
+                "base/packages/SettingsLib/src",
+                "base/packages/SettingsProvider/src",
+                "Settings/src"
+        ].collect { symbol ->
+            [symbol, new File("${project.rootDir}/../$symbol"), new File("${project.rootDir}/externals/${symbol.replaceAll("/", "@")}")]
         }
 
-        path.collect { [it, it.replaceAll(/[\.\/]+/, "@").replaceAll(/^@|@$/, "")] }.forEach { pair ->
-            def to = Paths.get("${project.rootDir}/externals/${pair[1]}").toAbsolutePath()
-            def from = Paths.get("${project.rootDir}/${pair[0]}").toAbsolutePath()
-            println("from: ${from} to:${to}")
-            Files.createSymbolicLink(to, from)
+        directSrc.forEach {
+            println(it)
         }
+
+        def childrenSrc = [
+                "base/Packages/SettingsLib"
+        ].collectMany { parent ->
+            new File("${project.rootDir}/../$parent").listFiles().findAll { it.isDirectory() && new File(it, "src").isDirectory() }.collect { module ->
+                def src = new File(module, "src")
+                def identifier = src.path.split(parent)[1].substring(1)
+                def symbol = "$parent/$identifier"
+                [symbol, src, new File("${project.rootDir}/externals/${symbol.replaceAll("/", "@")}")]
+            }
+        }
+
+        (directSrc + childrenSrc).forEach {
+            println("from: ${it[1]} -> ${it[2]}")
+            Files.createSymbolicLink(it[2].toPath(), it[1].toPath())
+        }
+
     }
 }
